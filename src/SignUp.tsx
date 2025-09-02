@@ -26,7 +26,6 @@ export default function SignUp({ onSignupSuccess }: SignUpProps) {
         }
 
         try {
-            // ✅ match Rust command: get_user
             const existingUser: { email: string } | null = await invoke("get_user", { email });
 
             if (existingUser) {
@@ -35,7 +34,6 @@ export default function SignUp({ onSignupSuccess }: SignUpProps) {
                 return;
             }
 
-            // ✅ match Rust command: create_user
             await invoke("create_user", { email, password });
 
             setMessage("✅ Signup successful! You can now log in.");

@@ -17,6 +17,7 @@ pub struct DbProduct {
     pub price: f64,
     pub description: String,
     pub category: String,
+    pub user_email: String,
 }
 
 // Keep a global database connection
@@ -47,14 +48,15 @@ pub fn init_db() -> Result<()> {
             [],
         )?;
 
-        // Products table
+        // Products table with user_email column
         conn.execute(
             "CREATE TABLE IF NOT EXISTS products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 price REAL NOT NULL,
                 description TEXT,
-                category TEXT
+                category TEXT,
+                user_email TEXT NOT NULL
             )",
             [],
         )?;
@@ -128,12 +130,18 @@ pub fn clear_current_user() -> Result<()> {
 //
 // --- PRODUCTS ---
 //
-pub fn add_product(name: &str, price: f64, description: &str, category: &str) -> Result<()> {
+pub fn add_product(
+    name: &str,
+    price: f64,
+    description: &str,
+    category: &str,
+    user_email: &str,
+) -> Result<()> {
     let db_lock = DB.lock().unwrap();
     let conn = db_lock.as_ref().unwrap();
     conn.execute(
-        "INSERT INTO products (name, price, description, category) VALUES (?1, ?2, ?3, ?4)",
-        params![name, price, description, category],
+        "INSERT INTO products (name, price, description, category, user_email) VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![name, price, description, category, user_email],
     )?;
     Ok(())
 }
@@ -142,7 +150,8 @@ pub fn get_products() -> Result<Vec<DbProduct>> {
     let db_lock = DB.lock().unwrap();
     let conn = db_lock.as_ref().unwrap();
 
-    let mut stmt = conn.prepare("SELECT id, name, price, description, category FROM products")?;
+    let mut stmt =
+        conn.prepare("SELECT id, name, price, description, category, user_email FROM products")?;
     let rows = stmt.query_map([], |row| {
         Ok(DbProduct {
             id: row.get(0)?,
@@ -150,6 +159,30 @@ pub fn get_products() -> Result<Vec<DbProduct>> {
             price: row.get(2)?,
             description: row.get(3)?,
             category: row.get(4)?,
+            user_email: row.get(5)?,
+        })
+    })?;
+
+    let mut products = Vec::new();
+    for product in rows {
+        products.push(product?);
+    }
+    Ok(products)
+}
+
+pub fn get_user_products(user_email: &str) -> Result<Vec<DbProduct>> {
+    let db_lock = DB.lock().unwrap();
+    let conn = db_lock.as_ref().unwrap();
+
+    let mut stmt = conn.prepare("SELECT id, name, price, description, category, user_email FROM products WHERE user_email = ?1")?;
+    let rows = stmt.query_map(params![user_email], |row| {
+        Ok(DbProduct {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            price: row.get(2)?,
+            description: row.get(3)?,
+            category: row.get(4)?,
+            user_email: row.get(5)?,
         })
     })?;
 
@@ -166,19 +199,23 @@ pub fn update_product(
     price: f64,
     description: &str,
     category: &str,
+    user_email: &str,
 ) -> Result<()> {
     let db_lock = DB.lock().unwrap();
     let conn = db_lock.as_ref().unwrap();
     conn.execute(
-        "UPDATE products SET name = ?1, price = ?2, description = ?3, category = ?4 WHERE id = ?5",
-        params![name, price, description, category, id],
+        "UPDATE products SET name = ?1, price = ?2, description = ?3, category = ?4 WHERE id = ?5 AND user_email = ?6",
+        params![name, price, description, category, id, user_email],
     )?;
     Ok(())
 }
 
-pub fn delete_product(id: i64) -> Result<()> {
+pub fn delete_product(id: i64, user_email: &str) -> Result<()> {
     let db_lock = DB.lock().unwrap();
     let conn = db_lock.as_ref().unwrap();
-    conn.execute("DELETE FROM products WHERE id = ?1", params![id])?;
+    conn.execute(
+        "DELETE FROM products WHERE id = ?1 AND user_email = ?2",
+        params![id, user_email],
+    )?;
     Ok(())
 }

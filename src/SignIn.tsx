@@ -19,13 +19,13 @@ export default function SignIn({ onLoginSuccess }: SignInProps) {
         setMessage("");
 
         try {
-            // ✅ Updated command names
+
             const user: { email: string; password: string } | null = await invoke("get_user", { email });
 
             if (user && user.password === password) {
-                await invoke("set_current_user", { email }); // ✅ updated
+                await invoke("set_current_user", { email });
                 onLoginSuccess(email);
-                navigate("/afterlogin"); // make sure this route matches your AfterLogin component
+                navigate("/afterlogin");
             } else {
                 setMessage("❌ Invalid email or password");
             }

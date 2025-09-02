@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "signup-page",
+  "productName": "Grocery-Store",
   "version": "0.1.0",
-  "identifier": "com.muzamil.signup-page",
+  "identifier": "com.aitazaz.grocestore",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "signup-page",
+        "title": "Grocery-Store",
         "width": 800,
         "height": 600
       }

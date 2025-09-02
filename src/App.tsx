@@ -12,7 +12,7 @@ export default function App() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const user = await invoke("get_current_user"); // ✅ updated command
+        const user = await invoke("get_current_user");
         setCurrentUser(user as string);
       } catch (error) {
         console.error("Error fetching current user:", error);
@@ -23,7 +23,7 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      await invoke("clear_current_user"); // ✅ updated command
+      await invoke("clear_current_user");
       setCurrentUser(null);
     } catch (error) {
       console.error("Logout error:", error);
@@ -36,7 +36,7 @@ export default function App() {
         <Route path="/" element={<SignIn onLoginSuccess={setCurrentUser} />} />
         <Route path="/signup" element={<SignUp onSignupSuccess={() => console.log("Signup success")} />} />
         <Route
-          path="/afterlogin" // ✅ fixed route path
+          path="/afterlogin"
           element={<AfterLogin userEmail={currentUser} onLogout={handleLogout} />}
         />
       </Routes>

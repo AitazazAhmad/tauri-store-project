@@ -9,6 +9,7 @@ interface Product {
     price: number;
     description: string;
     category: string;
+    user_email: string; // Add user_email field to track ownership
 }
 
 interface AfterLoginProps {
@@ -27,14 +28,20 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
     const [productDescription, setProductDescription] = useState("");
     const [productCategory, setProductCategory] = useState("");
 
-    // Load products from SQLite via backend
+    // Load products from SQLite via backend - filtered by user email
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        if (userEmail) {
+            fetchProducts();
+        }
+    }, [userEmail]);
 
     const fetchProducts = async () => {
         try {
-            const result: Product[] = await invoke("get_products");
+            if (!userEmail) return;
+
+            const result: Product[] = await invoke("get_user_products", {
+                userEmail: userEmail
+            });
             setProducts(result);
         } catch (err) {
             console.error("Failed to fetch products", err);
@@ -52,7 +59,7 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!productName || !productPrice || !productDescription || !productCategory) {
+        if (!productName || !productPrice || !productDescription || !productCategory || !userEmail) {
             alert("Please fill in all fields");
             return;
         }
@@ -65,6 +72,7 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
                     price: parseFloat(productPrice),
                     description: productDescription,
                     category: productCategory,
+                    userEmail: userEmail, // Pass user email for verification
                 });
             } else {
                 await invoke("add_product", {
@@ -72,6 +80,7 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
                     price: parseFloat(productPrice),
                     description: productDescription,
                     category: productCategory,
+                    userEmail: userEmail, // Add user email when creating product
                 });
             }
 
@@ -83,6 +92,12 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
     };
 
     const handleEdit = (product: Product) => {
+        // Verify that the product belongs to the current user
+        if (product.user_email !== userEmail) {
+            alert("You can only edit your own products");
+            return;
+        }
+
         setEditingProduct(product);
         setProductName(product.name);
         setProductPrice(product.price.toString());
@@ -91,9 +106,20 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
     };
 
     const handleDelete = async (id: number) => {
+        // Find the product to verify ownership
+        const productToDelete = products.find(p => p.id === id);
+
+        if (productToDelete && productToDelete.user_email !== userEmail) {
+            alert("You can only delete your own products");
+            return;
+        }
+
         if (window.confirm("Are you sure you want to delete this product?")) {
             try {
-                await invoke("delete_product", { id });
+                await invoke("delete_product", {
+                    id,
+                    userEmail: userEmail // Pass user email for verification
+                });
                 await fetchProducts();
             } catch (err) {
                 console.error("Error deleting product", err);
@@ -109,7 +135,7 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
     return (
         <div className="container">
             <h1>Welcome, {userEmail}!</h1>
-            <h2>Product Management System</h2>
+            <h2>Grocery-Store</h2>
 
             {/* Product Form */}
             <div className="form-section">

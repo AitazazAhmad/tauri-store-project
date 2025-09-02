@@ -20,6 +20,7 @@ struct Product {
     price: f64,
     description: String,
     category: String,
+    user_email: String,
 }
 
 //
@@ -67,8 +68,9 @@ fn add_product(
     price: f64,
     description: String,
     category: String,
+    user_email: String,
 ) -> Result<(), String> {
-    db::add_product(&name, price, &description, &category).map_err(|e| e.to_string())
+    db::add_product(&name, price, &description, &category, &user_email).map_err(|e| e.to_string())
 }
 
 #[command]
@@ -82,6 +84,25 @@ fn get_products() -> Result<Vec<Product>, String> {
                 price: p.price,
                 description: p.description,
                 category: p.category,
+                user_email: p.user_email,
+            })
+            .collect()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[command]
+fn get_user_products(user_email: String) -> Result<Vec<Product>, String> {
+    match db::get_user_products(&user_email) {
+        Ok(list) => Ok(list
+            .into_iter()
+            .map(|p| Product {
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                description: p.description,
+                category: p.category,
+                user_email: p.user_email,
             })
             .collect()),
         Err(e) => Err(e.to_string()),
@@ -95,13 +116,15 @@ fn update_product(
     price: f64,
     description: String,
     category: String,
+    user_email: String,
 ) -> Result<(), String> {
-    db::update_product(id, &name, price, &description, &category).map_err(|e| e.to_string())
+    db::update_product(id, &name, price, &description, &category, &user_email)
+        .map_err(|e| e.to_string())
 }
 
 #[command]
-fn delete_product(id: i64) -> Result<(), String> {
-    db::delete_product(id).map_err(|e| e.to_string())
+fn delete_product(id: i64, user_email: String) -> Result<(), String> {
+    db::delete_product(id, &user_email).map_err(|e| e.to_string())
 }
 
 //
@@ -124,6 +147,7 @@ fn main() {
             // Product commands
             add_product,
             get_products,
+            get_user_products,
             update_product,
             delete_product,
         ])
