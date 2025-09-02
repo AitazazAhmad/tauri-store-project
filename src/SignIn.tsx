@@ -19,12 +19,13 @@ export default function SignIn({ onLoginSuccess }: SignInProps) {
         setMessage("");
 
         try {
-            const user: { email: string; password: string } | null = await invoke("get_user_cmd", { email });
+            // ✅ Updated command names
+            const user: { email: string; password: string } | null = await invoke("get_user", { email });
 
             if (user && user.password === password) {
-                await invoke("set_current_user_cmd", { email });
+                await invoke("set_current_user", { email }); // ✅ updated
                 onLoginSuccess(email);
-                navigate("/welcome");
+                navigate("/afterlogin"); // make sure this route matches your AfterLogin component
             } else {
                 setMessage("❌ Invalid email or password");
             }
@@ -61,7 +62,6 @@ export default function SignIn({ onLoginSuccess }: SignInProps) {
                 </button>
             </form>
 
-            {/* Toggle to Signup */}
             <p className="toggle">
                 Don't have an account?{" "}
                 <button

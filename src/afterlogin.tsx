@@ -1,6 +1,6 @@
-// AfterLogin.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 interface Product {
@@ -27,18 +27,19 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
     const [productDescription, setProductDescription] = useState("");
     const [productCategory, setProductCategory] = useState("");
 
-    // Load products from localStorage
+    // Load products from SQLite via backend
     useEffect(() => {
-        const savedProducts = localStorage.getItem("products");
-        if (savedProducts) {
-            setProducts(JSON.parse(savedProducts));
-        }
+        fetchProducts();
     }, []);
 
-    // Save products to localStorage
-    useEffect(() => {
-        localStorage.setItem("products", JSON.stringify(products));
-    }, [products]);
+    const fetchProducts = async () => {
+        try {
+            const result: Product[] = await invoke("get_products");
+            setProducts(result);
+        } catch (err) {
+            console.error("Failed to fetch products", err);
+        }
+    };
 
     const resetForm = () => {
         setProductName("");
@@ -48,7 +49,7 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
         setEditingProduct(null);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!productName || !productPrice || !productDescription || !productCategory) {
@@ -56,33 +57,29 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
             return;
         }
 
-        if (editingProduct) {
-            // Update existing product
-            const updatedProducts = products.map(product =>
-                product.id === editingProduct.id
-                    ? {
-                        ...product,
-                        name: productName,
-                        price: parseFloat(productPrice),
-                        description: productDescription,
-                        category: productCategory,
-                    }
-                    : product
-            );
-            setProducts(updatedProducts);
-        } else {
-            // Add new product
-            const newProduct: Product = {
-                id: Date.now(),
-                name: productName,
-                price: parseFloat(productPrice),
-                description: productDescription,
-                category: productCategory,
-            };
-            setProducts([...products, newProduct]);
-        }
+        try {
+            if (editingProduct) {
+                await invoke("update_product", {
+                    id: editingProduct.id,
+                    name: productName,
+                    price: parseFloat(productPrice),
+                    description: productDescription,
+                    category: productCategory,
+                });
+            } else {
+                await invoke("add_product", {
+                    name: productName,
+                    price: parseFloat(productPrice),
+                    description: productDescription,
+                    category: productCategory,
+                });
+            }
 
-        resetForm();
+            await fetchProducts();
+            resetForm();
+        } catch (err) {
+            console.error("Error saving product", err);
+        }
     };
 
     const handleEdit = (product: Product) => {
@@ -93,9 +90,14 @@ const AfterLogin: React.FC<AfterLoginProps> = ({ userEmail, onLogout }) => {
         setProductCategory(product.category);
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = async (id: number) => {
         if (window.confirm("Are you sure you want to delete this product?")) {
-            setProducts(products.filter(product => product.id !== id));
+            try {
+                await invoke("delete_product", { id });
+                await fetchProducts();
+            } catch (err) {
+                console.error("Error deleting product", err);
+            }
         }
     };
 

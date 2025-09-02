@@ -26,14 +26,18 @@ export default function SignUp({ onSignupSuccess }: SignUpProps) {
         }
 
         try {
-            const existingUser: { email: string } | null = await invoke("get_user_cmd", { email });
+            // ✅ match Rust command: get_user
+            const existingUser: { email: string } | null = await invoke("get_user", { email });
 
             if (existingUser) {
                 setMessage("⚠️ User already exists");
+                setIsLoading(false);
                 return;
             }
 
-            await invoke("create_user_cmd", { email, password });
+            // ✅ match Rust command: create_user
+            await invoke("create_user", { email, password });
+
             setMessage("✅ Signup successful! You can now log in.");
             setEmail("");
             setPassword("");
@@ -81,19 +85,16 @@ export default function SignUp({ onSignupSuccess }: SignUpProps) {
                 </button>
             </form>
 
-            {/* Back to Login button */}
             <p className="toggle">
                 Already have an account?{" "}
-                <button
-                    type="button"
-                    onClick={() => navigate("/")}
-                    disabled={isLoading}
-                >
+                <button type="button" onClick={() => navigate("/")} disabled={isLoading}>
                     Login
                 </button>
             </p>
 
-            {message && <p className={message.includes("✅") ? "success" : "error"}>{message}</p>}
+            {message && (
+                <p className={message.includes("✅") ? "success" : "error"}>{message}</p>
+            )}
         </main>
     );
 }

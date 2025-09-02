@@ -13,13 +13,25 @@ struct User {
     password: String,
 }
 
+#[derive(Serialize)]
+struct Product {
+    id: Option<i64>,
+    name: String,
+    price: f64,
+    description: String,
+    category: String,
+}
+
+//
+// --- USER COMMANDS ---
+//
 #[command]
-fn create_user_cmd(email: String, password: String) -> Result<(), String> {
+fn create_user(email: String, password: String) -> Result<(), String> {
     db::create_user(&email, &password).map_err(|e| e.to_string())
 }
 
 #[command]
-fn get_user_cmd(email: String) -> Result<Option<User>, String> {
+fn get_user(email: String) -> Result<Option<User>, String> {
     match db::get_user(&email) {
         Ok(Some(u)) => Ok(Some(User {
             id: u.id,
@@ -32,20 +44,69 @@ fn get_user_cmd(email: String) -> Result<Option<User>, String> {
 }
 
 #[command]
-fn set_current_user_cmd(email: String) -> Result<(), String> {
+fn set_current_user(email: String) -> Result<(), String> {
     db::set_current_user(&email).map_err(|e| e.to_string())
 }
 
 #[command]
-fn get_current_user_cmd() -> Result<Option<String>, String> {
+fn get_current_user() -> Result<Option<String>, String> {
     db::get_current_user().map_err(|e| e.to_string())
 }
 
 #[command]
-fn clear_current_user_cmd() -> Result<(), String> {
+fn clear_current_user() -> Result<(), String> {
     db::clear_current_user().map_err(|e| e.to_string())
 }
 
+//
+// --- PRODUCT COMMANDS ---
+//
+#[command]
+fn add_product(
+    name: String,
+    price: f64,
+    description: String,
+    category: String,
+) -> Result<(), String> {
+    db::add_product(&name, price, &description, &category).map_err(|e| e.to_string())
+}
+
+#[command]
+fn get_products() -> Result<Vec<Product>, String> {
+    match db::get_products() {
+        Ok(list) => Ok(list
+            .into_iter()
+            .map(|p| Product {
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                description: p.description,
+                category: p.category,
+            })
+            .collect()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[command]
+fn update_product(
+    id: i64,
+    name: String,
+    price: f64,
+    description: String,
+    category: String,
+) -> Result<(), String> {
+    db::update_product(id, &name, price, &description, &category).map_err(|e| e.to_string())
+}
+
+#[command]
+fn delete_product(id: i64) -> Result<(), String> {
+    db::delete_product(id).map_err(|e| e.to_string())
+}
+
+//
+// --- MAIN ---
+//
 fn main() {
     // Initialize database on startup
     if let Err(e) = db::init_db() {
@@ -54,11 +115,17 @@ fn main() {
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            create_user_cmd,
-            get_user_cmd,
-            set_current_user_cmd,
-            get_current_user_cmd,
-            clear_current_user_cmd,
+            // User/session commands
+            create_user,
+            get_user,
+            set_current_user,
+            get_current_user,
+            clear_current_user,
+            // Product commands
+            add_product,
+            get_products,
+            update_product,
+            delete_product,
         ])
         .run(tauri::generate_context!())
         .expect("❌ error while running Tauri application");
