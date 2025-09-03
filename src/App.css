@@ -7,18 +7,23 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  box-sizing: border-box;
 }
 
 /* Main container */
 .container {
   background: #fff;
-  padding: 40px 30px;
+  padding: 30px;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 400px;
+  width: 95%;          /* Takes almost full width of screen */
+  max-width: 1600px;   /* Bigger for laptop screens */
   text-align: center;
+  margin: 0 auto;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -31,6 +36,7 @@ h1 {
 .form {
   display: flex;
   flex-direction: column;
+  width: 100%;
   gap: 15px;
 }
 
@@ -109,7 +115,6 @@ h1 {
   width: 100%; /* underline grows from left to right */
 }
 
-
 /* Message styling */
 p {
   margin-top: 15px;
@@ -117,17 +122,23 @@ p {
   font-weight: 500;
 }
 
-
-/* styling for the afterlogin component */
-/* Product Management Styles */
-.form-section {
+/* After-login product management styles */
+.form-section,
+.products-section {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 25px;
+  border-radius: 12px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 1600px;  /* Bigger for laptop width */
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
+/* Product form */
 .product-form {
   display: flex;
   flex-direction: column;
@@ -142,34 +153,34 @@ p {
 .form-input {
   padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 14px;
 }
 
 .form-buttons {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-.products-section {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
+/* Products grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Wider cards */
+  gap: 25px;
   margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* Product card */
 .product-card {
   border: 1px solid #ddd;
-  padding: 15px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 10px;
   background: #f9f9f9;
+  text-align: left;
+  word-wrap: break-word;
 }
 
 .product-price {
@@ -181,12 +192,13 @@ p {
   display: flex;
   gap: 10px;
   margin-top: 15px;
+  flex-wrap: wrap;
 }
 
 .button {
   padding: 10px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
 }
@@ -218,4 +230,27 @@ p {
 
 .button:hover {
   opacity: 0.9;
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
+  .container,
+  .form-section,
+  .products-section {
+    max-width: 95%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container,
+  .form-section,
+  .products-section {
+    max-width: 100%;
+    padding: 15px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+  }
 }
